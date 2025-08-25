@@ -1,0 +1,31 @@
+{
+  "manifest_version": 3,
+  "name": "FocusFlow",
+  "version": "1.0",
+  "description": "A Pomodoro timer that blocks distracting tabs and requires session logging to enforce focus.",
+  "permissions": [
+    "storage",
+    "tabs",
+    "notifications",
+    "scripting"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup.html"
+  },
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "home.html"
+      ],
+      "matches": [
+        "<all_urls>"
+      ]
+    }
+  ]
+}
