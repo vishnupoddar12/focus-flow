@@ -1,2 +1,2 @@
 # focus-flow
-Chrome extension which forces you to log your web surfing using pomodoro.
+A Pomodoro timer that blocks distracting tabs and requires session logging to enforce focus.
