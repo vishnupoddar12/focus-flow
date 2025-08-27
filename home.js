@@ -457,13 +457,21 @@ class FocusFlowHome {
 
       const date = new Date(entry.end_time).toLocaleString();
 
-      entryDiv.innerHTML = `
+      const headerHTML = `
               <div class="log-header">
                   <span class="log-date">${date}</span>
                   <span class="log-duration">${entry.duration} min session</span>
               </div>
-              <p class="log-summary">${entry.summary_text}</p>
           `;
+      entryDiv.innerHTML = headerHTML;
+
+      // Create the summary paragraph and set its textContent
+      const summaryP = document.createElement("p");
+      summaryP.className = "log-summary";
+      summaryP.textContent = entry.summary_text;
+
+      // Append the new paragraph to the entry
+      entryDiv.appendChild(summaryP);
       this.pomoLogContainer.appendChild(entryDiv);
     });
   }
