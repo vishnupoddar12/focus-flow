@@ -32,6 +32,10 @@ class FocusFlowHome {
     };
   }
 
+  static get MIN_SUMMARY_WORDS() {
+    return 50;
+  }
+
   // --- Initialization ---
 
   constructor() {
@@ -299,7 +303,7 @@ class FocusFlowHome {
 
     this.wordCounter.textContent = `${wordCount} / 50 words`;
 
-    if (wordCount >= 50) {
+    if (wordCount >= FocusFlowHome.MIN_SUMMARY_WORDS) {
       this.submitLogBtn.disabled = false;
       this.wordCounter.style.color = "var(--success-color)";
     } else {
