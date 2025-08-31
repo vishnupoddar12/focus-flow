@@ -207,3 +207,57 @@ header p {
   line-height: 1.6;
   color: var(--primary-text);
 }
+
+/* Styles for Log Editing */
+.log-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.edit-log-btn {
+  background: none;
+  border: 1px solid var(--border-color);
+  color: var(--secondary-text);
+  padding: 0.25rem 0.75rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.edit-log-btn:hover {
+  background-color: var(--bg-color);
+  color: var(--primary-text);
+}
+
+.edit-summary-textarea {
+  width: 100%;
+  min-height: 120px;
+  padding: 0.75rem;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  font-family: "Inter", sans-serif;
+  font-size: 1rem;
+  resize: vertical;
+  box-sizing: border-box;
+  margin-bottom: 1rem;
+}
+
+.save-edit-btn {
+  display: block;
+  margin-left: auto;
+  padding: 0.5rem 1.25rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.2s ease-in-out;
+}
+
+.save-edit-btn:hover {
+  background-color: var(--primary-hover);
+}

@@ -455,29 +455,109 @@ class FocusFlowHome {
       return;
     }
 
+    const fragment = document.createDocumentFragment();
+
     logEntries.forEach((entry) => {
       const entryDiv = document.createElement("div");
       entryDiv.className = "log-entry";
+      entryDiv.dataset.sessionId = entry.sessionId; // Use a data attribute for the ID
 
       const date = new Date(entry.end_time).toLocaleString();
 
       const headerHTML = `
               <div class="log-header">
                   <span class="log-date">${date}</span>
-                  <span class="log-duration">${entry.duration} min session</span>
+                  <div class="log-actions">
+                    <span class="log-duration">${entry.duration} min session</span>
+                    <button class="edit-log-btn">Edit</button>
+                  </div>
               </div>
           `;
       entryDiv.innerHTML = headerHTML;
 
-      // Create the summary paragraph and set its textContent
       const summaryP = document.createElement("p");
       summaryP.className = "log-summary";
       summaryP.textContent = entry.summary_text;
 
-      // Append the new paragraph to the entry
       entryDiv.appendChild(summaryP);
-      this.pomoLogContainer.appendChild(entryDiv);
+      fragment.appendChild(entryDiv);
     });
+
+    this.pomoLogContainer.appendChild(fragment);
+
+    // Add event listeners after appending to the DOM
+    this.pomoLogContainer
+      .querySelectorAll(".edit-log-btn")
+      .forEach((button) => {
+        button.addEventListener("click", this.handleEditLog.bind(this));
+      });
+  }
+
+  handleEditLog(event) {
+    const button = event.target;
+    const entryDiv = button.closest(".log-entry");
+    const summaryP = entryDiv.querySelector(".log-summary");
+    const originalText = summaryP.textContent;
+
+    // Create textarea
+    const textArea = document.createElement("textarea");
+    textArea.className = "edit-summary-textarea";
+    textArea.value = originalText;
+
+    // Create save button
+    const saveButton = document.createElement("button");
+    saveButton.textContent = "Save";
+    saveButton.className = "save-edit-btn";
+
+    // Replace paragraph with textarea and save button
+    summaryP.replaceWith(textArea, saveButton);
+    button.style.display = "none"; // Hide edit button
+
+    saveButton.addEventListener("click", async () => {
+      const newText = textArea.value;
+      const sessionId = entryDiv.dataset.sessionId;
+
+      await this.updateLogEntry(sessionId, newText);
+
+      // Restore the view
+      summaryP.textContent = newText;
+      textArea.replaceWith(summaryP);
+      saveButton.remove();
+      button.style.display = "inline-block"; // Show edit button again
+    });
+  }
+
+  async updateLogEntry(sessionId, newSummaryText) {
+    try {
+      const file = await this.fileHandle.getFile();
+      const content = await file.text();
+      const logEntries = content
+        .trim()
+        .split("\n")
+        .map((line) => JSON.parse(line));
+
+      const entryIndex = logEntries.findIndex(
+        (entry) => entry.sessionId === sessionId
+      );
+      if (entryIndex === -1) {
+        throw new Error("Log entry not found.");
+      }
+
+      logEntries[entryIndex].summary_text = newSummaryText;
+
+      const newContent = logEntries
+        .map((entry) => JSON.stringify(entry))
+        .join("\n");
+
+      const writable = await this.fileHandle.createWritable();
+      await writable.write(newContent);
+      await writable.close();
+
+      console.log("Log updated successfully.");
+    } catch (err) {
+      console.error("Error updating log:", err);
+      this.showError("Could not update the log file.");
+    }
   }
 
   resetToStartState() {
