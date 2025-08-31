@@ -68,36 +68,42 @@ class FocusFlowBackground {
   }
 
   /**
+   * Converts a user-defined wildcard string to a regular expression.
+   * @param {string} wildcard - The wildcard string (e.g., *google.com*).
+   * @returns {RegExp} - A regular expression object.
+   */
+  wildcardToRegex(wildcard) {
+    const escaped = wildcard.replace(/[.+?^${}()|[\]\\]/g, "\\$&");
+    const regexString = escaped.replace(/\*/g, ".*");
+    return new RegExp(`^${regexString}$`, "i");
+  }
+
+  /**
    * Handles tab updates to block sites when the timer is not running.
    * @param {number} tabId - The ID of the updated tab.
    * @param {object} changeInfo - An object containing information about the changes to the tab.
    * @param {object} tab - The updated tab object.
    */
-  handleTabUpdate(tabId, changeInfo, tab) {
-    if (
-      tab.url &&
-      changeInfo.status === "complete" &&
-      this.isUrlBlockable(tab.url)
-    ) {
-      chrome.storage.local.get(
-        [FocusFlowBackground.STORAGE_KEYS.TIMER_STATE],
-        (result) => {
-          if (chrome.runtime.lastError) {
-            console.error(
-              "Error getting timer state:",
-              chrome.runtime.lastError
-            );
-            return;
-          }
+  async handleTabUpdate(tabId, changeInfo, tab) {
+    if (tab.url && changeInfo.status === "complete") {
+      try {
+        const result = await chrome.storage.local.get([
+          FocusFlowBackground.STORAGE_KEYS.TIMER_STATE,
+          "excludedUrls",
+        ]);
 
-          if (
-            result[FocusFlowBackground.STORAGE_KEYS.TIMER_STATE] !==
-            FocusFlowBackground.TIMER_STATE.RUNNING
-          ) {
-            this.redirectToHomePage(tabId);
-          }
+        const state = result[FocusFlowBackground.STORAGE_KEYS.TIMER_STATE];
+        const excludedUrls = result.excludedUrls || [];
+
+        if (
+          state !== FocusFlowBackground.TIMER_STATE.RUNNING &&
+          this.isUrlBlockable(tab.url, excludedUrls)
+        ) {
+          this.redirectToHomePage(tabId);
         }
-      );
+      } catch (error) {
+        console.error("FocusFlow: Error handling tab update:", error);
+      }
     }
   }
 
@@ -116,19 +122,28 @@ class FocusFlowBackground {
   /**
    * Checks if a given URL should be blocked.
    * @param {string} url - The URL to check.
+   * @param {string[]} excludedUrls - An array of user-defined wildcard patterns.
    * @returns {boolean} - True if the URL is blockable, false otherwise.
    */
-  isUrlBlockable(url) {
+  isUrlBlockable(url, excludedUrls) {
     const isChromeInternal = url.startsWith("chrome://");
-    const isExtensionPage = url.includes("home.html");
+    const isExtensionPage = url.includes(chrome.runtime.id);
     const isNewTabPage = url === "chrome://newtab/";
     const isWebPage = url.startsWith("http://") || url.startsWith("https://");
 
-    if (isChromeInternal || isExtensionPage || isNewTabPage) {
+    if (isChromeInternal || isExtensionPage || isNewTabPage || !isWebPage) {
       return false;
     }
 
-    return isWebPage;
+    // Check against the user's exclusion list
+    for (const wildcard of excludedUrls) {
+      const regex = this.wildcardToRegex(wildcard);
+      if (regex.test(url)) {
+        return false; // This URL is excluded, so it's not blockable
+      }
+    }
+
+    return true; // The URL is not in the exclusion list, so it's blockable
   }
 
   /**
@@ -141,7 +156,10 @@ class FocusFlowBackground {
       { url: chrome.runtime.getURL("home.html") },
       () => {
         if (chrome.runtime.lastError) {
-          console.error("Error redirecting tab:", chrome.runtime.lastError);
+          console.error(
+            "Error redirecting tab:",
+            chrome.runtime.lastError.message
+          );
         }
       }
     );

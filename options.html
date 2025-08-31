@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>FocusFlow - Options</title>
+    <link rel="stylesheet" href="options.css" />
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <h1>FocusFlow Options</h1>
+        <p>Add URL wildcards to exclude sites from being blocked.</p>
+      </header>
+
+      <main>
+        <div class="card">
+          <h2>Add a new wildcard</h2>
+          <form id="add-wildcard-form">
+            <input
+              type="text"
+              id="wildcard-input"
+              placeholder="e.g., *://*.google.com/*"
+              required
+            />
+            <button type="submit">Add</button>
+          </form>
+          <p class="example">
+            Examples: `*google.com*` (matches any URL with "google.com"),
+            `https://*.wikipedia.org/*` (matches all secure Wikipedia pages).
+          </p>
+        </div>
+
+        <div class="card">
+          <h2>Excluded URLs</h2>
+          <ul id="wildcard-list"></ul>
+        </div>
+      </main>
+    </div>
+    <script src="options.js"></script>
+  </body>
+</html>
