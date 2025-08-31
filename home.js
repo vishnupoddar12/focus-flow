@@ -233,6 +233,11 @@ class FocusFlowHome {
           result[FocusFlowHome.STORAGE_KEYS.TIMER_STATE] ||
           FocusFlowHome.TIMER_STATE.START;
 
+        // Sync the note input as well
+        this.noteInput.value =
+          result[FocusFlowHome.STORAGE_KEYS.CURRENT_NOTE] || "";
+
+        // Hide all sections initially
         this.startStateDiv.classList.add("hidden");
         this.runningStateDiv.classList.add("hidden");
         this.endStateDiv.classList.add("hidden");
