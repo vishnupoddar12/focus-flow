@@ -227,6 +227,7 @@ class FocusFlowHome {
         FocusFlowHome.STORAGE_KEYS.TIMER_STATE,
         FocusFlowHome.STORAGE_KEYS.END_TIME,
         FocusFlowHome.STORAGE_KEYS.CURRENT_SUMMARY,
+        FocusFlowHome.STORAGE_KEYS.CURRENT_NOTE,
       ],
       (result) => {
         const state =
