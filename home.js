@@ -381,6 +381,9 @@ class FocusFlowHome {
 
     await this.appendLogToFile(logEntry);
     this.noteInput.value = ""; // Clear the input
+
+    // Clear the note from storage to sync the empty state across all tabs.
+    chrome.storage.local.set({ [FocusFlowHome.STORAGE_KEYS.CURRENT_NOTE]: "" });
     this.loadLogs();
   }
 
