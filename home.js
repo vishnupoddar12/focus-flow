@@ -22,6 +22,7 @@ class FocusFlowHome {
       SESSION_ID: "sessionId",
       CURRENT_SUMMARY: "currentSummary",
       CURRENT_NOTE: "currentNote",
+      LOG_UPDATED_AT: "logUpdatedAt",
     };
   }
 
@@ -196,6 +197,11 @@ class FocusFlowHome {
       if (this.noteInput.value !== newText) {
         this.noteInput.value = newText;
       }
+    }
+
+    // If the log update timestamp has changed, it means a new log was saved in another tab.
+    if (changes[FocusFlowHome.STORAGE_KEYS.LOG_UPDATED_AT]) {
+      this.loadLogs();
     }
 
     // Responds to changes in the global timer state.
@@ -433,6 +439,9 @@ class FocusFlowHome {
       const writable = await this.fileHandle.createWritable();
       await writable.write(newContent);
       await writable.close();
+      chrome.storage.local.set({
+        [FocusFlowHome.STORAGE_KEYS.LOG_UPDATED_AT]: new Date().toISOString(),
+      });
 
       console.log("Log appended successfully.");
     } catch (err) {
