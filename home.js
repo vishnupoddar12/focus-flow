@@ -61,7 +61,7 @@ class FocusFlowHome {
     this.submitLogBtn = document.getElementById("submit-log-btn");
     this.noteInput = document.getElementById("note-input");
     this.submitNoteBtn = document.getElementById("submit-note-btn");
-    this.pomoLogContainer = document.getElementById("pomo-log-container");
+    this.entriesContainer = document.getElementById("entries-container");
     this.errorSection = document.getElementById("error-section");
     this.errorMessage = document.getElementById("error-message");
   }
@@ -165,6 +165,27 @@ class FocusFlowHome {
       clearTimeout(timeout);
       timeout = setTimeout(later, wait);
     };
+  }
+
+  /**
+   * An internal helper to fetch a file handle, retrying a few times
+   * with a delay. This is crucial for handling a race condition on the
+   * very first log save across multiple tabs.
+   * @param {number} retriesLeft - How many attempts are remaining.
+   * @returns {Promise<FileSystemFileHandle|null>} The file handle or null.
+   * @private
+   */
+  async _getFileHandleWithRetries(retriesLeft = 3) {
+    const handle = await this.getFileHandle();
+    if (handle) {
+      return handle; // Success! Return the handle immediately.
+    }
+    if (retriesLeft > 0) {
+      // If we failed, wait a moment before trying again.
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      return this._getFileHandleWithRetries(retriesLeft - 1);
+    }
+    return null; // No more retries left.
   }
 
   // --- Event Handlers ---
@@ -403,7 +424,7 @@ class FocusFlowHome {
     try {
       if (!this.fileHandle) {
         this.fileHandle = await window.showSaveFilePicker({
-          suggestedName: "pomo_log.txt",
+          suggestedName: "activity_log.txt",
           types: [
             {
               description: "Text Files",
@@ -454,11 +475,16 @@ class FocusFlowHome {
   }
 
   async loadLogs() {
-    this.pomoLogContainer.innerHTML = "";
+    this.entriesContainer.innerHTML = "";
     this.hideError();
 
+    // If the file handle isn't in memory, use the utility method to fetch it.
     if (!this.fileHandle) {
-      this.pomoLogContainer.innerHTML =
+      this.fileHandle = await this._getFileHandleWithRetries();
+    }
+
+    if (!this.fileHandle) {
+      this.entriesContainer.innerHTML =
         '<p class="log-summary">Your session logs will appear here once you save your first session.</p>';
       return;
     }
@@ -472,7 +498,7 @@ class FocusFlowHome {
         const file = await this.fileHandle.getFile();
         const content = await file.text();
         if (content.trim() === "") {
-          this.pomoLogContainer.innerHTML =
+          this.entriesContainer.innerHTML =
             '<p class="log-summary">No entries logged yet.</p>';
           return;
         }
@@ -483,7 +509,7 @@ class FocusFlowHome {
         logEntries.sort((a, b) => new Date(b.end_time) - new Date(a.end_time));
         this.renderLogs(logEntries);
       } else if (permissionStatus === "prompt") {
-        this.pomoLogContainer.innerHTML = `
+        this.entriesContainer.innerHTML = `
           <p class="log-summary">This extension needs permission to read your log file.</p>
           <button id="grant-permission-btn" class="start-btn">Grant Permission and Load Logs</button>
         `;
@@ -518,9 +544,9 @@ class FocusFlowHome {
   }
 
   renderLogs(logEntries) {
-    this.pomoLogContainer.innerHTML = "";
+    this.entriesContainer.innerHTML = "";
     if (logEntries.length === 0) {
-      this.pomoLogContainer.innerHTML = "<p>No entries logged yet.</p>";
+      this.entriesContainer.innerHTML = "<p>No entries logged yet.</p>";
       return;
     }
 
@@ -557,10 +583,10 @@ class FocusFlowHome {
       fragment.appendChild(entryDiv);
     });
 
-    this.pomoLogContainer.appendChild(fragment);
+    this.entriesContainer.appendChild(fragment);
 
     // Add event listeners after appending to the DOM
-    this.pomoLogContainer
+    this.entriesContainer
       .querySelectorAll(".edit-log-btn")
       .forEach((button) => {
         button.addEventListener("click", this.handleEditLog.bind(this));

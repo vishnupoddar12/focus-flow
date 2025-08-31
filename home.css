@@ -178,7 +178,7 @@ header p {
 }
 
 /* Log Section */
-#pomo-log-container {
+#entries-container {
   max-height: 400px;
   overflow-y: auto;
   padding-right: 1rem; /* for scrollbar spacing */

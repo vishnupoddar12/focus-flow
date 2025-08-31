@@ -1,5 +1,5 @@
-1. All pomo tabs timer are in sync.
-2. All pomo tabs summarize messages are in sync.
+1. All FocusFlow tabs timer are in sync.
+2. All FocusFlow tabs summarize messages are in sync.
 3. Fast typing donot cause fluttering issue
-4. Submit logs updates all tab to show all the recent pomo session.
+4. Submit logs updates all tab to show all the recent entries.
 5. Closing and opening chrome presist the timer state.
