@@ -1,5 +1,5 @@
 /* home.css */
-@import url("[https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap](https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap)");
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap");
 
 :root {
   --bg-color: #f0f4f8;
@@ -12,6 +12,7 @@
   --border-color: #e2e8f0;
   --success-color: #10b981;
   --danger-color: #ef4444;
+  --note-color: #f59e0b;
 }
 
 body {
@@ -70,7 +71,8 @@ header p {
 #start-state h2,
 #end-state h2,
 #summary-section h2,
-#log-section h2 {
+#log-section h2,
+#note-section h2 {
   margin-top: 0;
   font-size: 1.5rem;
   font-weight: 600;
@@ -117,10 +119,11 @@ header p {
   color: var(--secondary-text);
 }
 
-/* Summary Section */
-#summary-input {
+/* Summary & Note Section */
+#summary-input,
+#note-input {
   width: 100%;
-  min-height: 150px;
+  min-height: 120px;
   padding: 1rem;
   border-radius: 8px;
   border: 1px solid var(--border-color);
@@ -130,7 +133,8 @@ header p {
   box-sizing: border-box;
 }
 
-#summary-input:focus {
+#summary-input:focus,
+#note-input:focus {
   outline: none;
   border-color: var(--primary-color);
   box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
@@ -148,16 +152,24 @@ header p {
   color: var(--secondary-text);
 }
 
-#submit-log-btn {
+#submit-log-btn,
+#submit-note-btn {
   padding: 0.75rem 1.5rem;
   font-size: 1rem;
   font-weight: 600;
-  background-color: var(--success-color);
   color: white;
   border: none;
   border-radius: 8px;
   cursor: pointer;
   transition: background-color 0.2s ease-in-out;
+}
+
+#submit-log-btn {
+  background-color: var(--success-color);
+}
+
+#submit-note-btn {
+  background-color: var(--note-color);
 }
 
 #submit-log-btn:disabled {
@@ -193,12 +205,21 @@ header p {
   color: var(--primary-text);
 }
 
-.log-duration {
+.log-duration,
+.log-type {
   font-size: 0.9rem;
-  background-color: var(--bg-color);
   color: var(--secondary-text);
   padding: 0.25rem 0.75rem;
   border-radius: 12px;
+}
+
+.log-duration {
+  background-color: var(--bg-color);
+}
+
+.log-type {
+  background-color: #fef3c7; /* A light yellow for notes */
+  color: #b45309;
 }
 
 .log-summary {

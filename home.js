@@ -21,6 +21,7 @@ class FocusFlowHome {
       DURATION: "duration",
       SESSION_ID: "sessionId",
       CURRENT_SUMMARY: "currentSummary",
+      CURRENT_NOTE: "currentNote",
     };
   }
 
@@ -57,6 +58,8 @@ class FocusFlowHome {
     this.summaryInput = document.getElementById("summary-input");
     this.wordCounter = document.getElementById("word-counter");
     this.submitLogBtn = document.getElementById("submit-log-btn");
+    this.noteInput = document.getElementById("note-input");
+    this.submitNoteBtn = document.getElementById("submit-note-btn");
     this.pomoLogContainer = document.getElementById("pomo-log-container");
     this.errorSection = document.getElementById("error-section");
     this.errorMessage = document.getElementById("error-message");
@@ -71,6 +74,11 @@ class FocusFlowHome {
     this.debouncedSyncSummary = this.debounce((text) => {
       chrome.storage.local.set({
         [FocusFlowHome.STORAGE_KEYS.CURRENT_SUMMARY]: text,
+      });
+    }, 250);
+    this.debouncedSyncNote = this.debounce((text) => {
+      chrome.storage.local.set({
+        [FocusFlowHome.STORAGE_KEYS.CURRENT_NOTE]: text,
       });
     }, 250);
   }
@@ -90,7 +98,11 @@ class FocusFlowHome {
       "input",
       this.validateSummary.bind(this)
     );
+    this.noteInput.addEventListener("input", (e) => {
+      this.debouncedSyncNote(e.target.value);
+    });
     this.submitLogBtn.addEventListener("click", this.saveLog.bind(this));
+    this.submitNoteBtn.addEventListener("click", this.saveNote.bind(this));
 
     chrome.storage.onChanged.addListener(this.handleStorageChange.bind(this));
   }
@@ -156,9 +168,18 @@ class FocusFlowHome {
 
   // --- Event Handlers ---
 
+  /**
+   * Listens for changes in chrome.storage.local and updates the UI accordingly.
+   * This is the core function for ensuring that all open FocusFlow tabs stay in sync.
+   *
+   * @param {object} changes - An object where keys are the names of the storage items that changed,
+   * and values are objects describing the change (containing `oldValue` and `newValue`).
+   * @param {string} namespace - The name of the storage area that changed. For this extension, it will always be "local".
+   */
   handleStorageChange(changes, namespace) {
     if (namespace !== "local") return;
 
+    // Syncs the session summary textarea if it was changed in another tab.
     if (changes[FocusFlowHome.STORAGE_KEYS.CURRENT_SUMMARY]) {
       const newText =
         changes[FocusFlowHome.STORAGE_KEYS.CURRENT_SUMMARY].newValue || "";
@@ -168,6 +189,16 @@ class FocusFlowHome {
       }
     }
 
+    // Syncs the note textarea if it was changed in another tab.
+    if (changes[FocusFlowHome.STORAGE_KEYS.CURRENT_NOTE]) {
+      const newText =
+        changes[FocusFlowHome.STORAGE_KEYS.CURRENT_NOTE].newValue || "";
+      if (this.noteInput.value !== newText) {
+        this.noteInput.value = newText;
+      }
+    }
+
+    // Responds to changes in the global timer state.
     if (changes[FocusFlowHome.STORAGE_KEYS.TIMER_STATE]) {
       this.updateUI();
       if (
@@ -316,6 +347,44 @@ class FocusFlowHome {
     const summaryText = this.summaryInput.value;
     if (summaryText.trim().length === 0) return;
 
+    const { duration, endTime, sessionId } = await chrome.storage.local.get([
+      FocusFlowHome.STORAGE_KEYS.DURATION,
+      FocusFlowHome.STORAGE_KEYS.END_TIME,
+      FocusFlowHome.STORAGE_KEYS.SESSION_ID,
+    ]);
+    const endDate = new Date(endTime);
+    const startDate = new Date(endDate.getTime() - duration * 60 * 1000);
+
+    const logEntry = {
+      type: "session",
+      sessionId: sessionId,
+      start_time: startDate.toISOString(),
+      end_time: endDate.toISOString(),
+      duration: duration,
+      summary_text: summaryText,
+    };
+
+    await this.appendLogToFile(logEntry);
+    this.resetToStartState();
+  }
+
+  async saveNote() {
+    const noteText = this.noteInput.value;
+    if (noteText.trim().length === 0) return;
+
+    const logEntry = {
+      type: "note",
+      sessionId: crypto.randomUUID(), // For editing purposes
+      end_time: new Date().toISOString(),
+      summary_text: noteText,
+    };
+
+    await this.appendLogToFile(logEntry);
+    this.noteInput.value = ""; // Clear the input
+    this.loadLogs();
+  }
+
+  async appendLogToFile(logEntry) {
     try {
       if (!this.fileHandle) {
         this.fileHandle = await window.showSaveFilePicker({
@@ -347,23 +416,6 @@ class FocusFlowHome {
 
       const file = await this.fileHandle.getFile();
       const oldContent = await file.text();
-
-      const { duration, endTime, sessionId } = await chrome.storage.local.get([
-        FocusFlowHome.STORAGE_KEYS.DURATION,
-        FocusFlowHome.STORAGE_KEYS.END_TIME,
-        FocusFlowHome.STORAGE_KEYS.SESSION_ID,
-      ]);
-      const endDate = new Date(endTime);
-      const startDate = new Date(endDate.getTime() - duration * 60 * 1000);
-
-      const logEntry = {
-        [FocusFlowHome.STORAGE_KEYS.SESSION_ID]: sessionId,
-        start_time: startDate.toISOString(),
-        end_time: endDate.toISOString(),
-        duration: duration,
-        summary_text: summaryText,
-      };
-
       const newContent =
         oldContent +
         (oldContent.length > 0 ? "\n" : "") +
@@ -374,7 +426,6 @@ class FocusFlowHome {
       await writable.close();
 
       console.log("Log appended successfully.");
-      this.resetToStartState();
     } catch (err) {
       console.error("Error saving log:", err);
       if (err.name !== "AbortError") {
@@ -404,7 +455,7 @@ class FocusFlowHome {
         const content = await file.text();
         if (content.trim() === "") {
           this.pomoLogContainer.innerHTML =
-            '<p class="log-summary">No sessions logged yet.</p>';
+            '<p class="log-summary">No entries logged yet.</p>';
           return;
         }
         const logEntries = content
@@ -451,7 +502,7 @@ class FocusFlowHome {
   renderLogs(logEntries) {
     this.pomoLogContainer.innerHTML = "";
     if (logEntries.length === 0) {
-      this.pomoLogContainer.innerHTML = "<p>No sessions logged yet.</p>";
+      this.pomoLogContainer.innerHTML = "<p>No entries logged yet.</p>";
       return;
     }
 
@@ -460,15 +511,20 @@ class FocusFlowHome {
     logEntries.forEach((entry) => {
       const entryDiv = document.createElement("div");
       entryDiv.className = "log-entry";
-      entryDiv.dataset.sessionId = entry.sessionId; // Use a data attribute for the ID
+      entryDiv.dataset.sessionId = entry.sessionId;
 
       const date = new Date(entry.end_time).toLocaleString();
+      const isNote = entry.type === "note";
 
       const headerHTML = `
               <div class="log-header">
                   <span class="log-date">${date}</span>
                   <div class="log-actions">
-                    <span class="log-duration">${entry.duration} min session</span>
+                    ${
+                      isNote
+                        ? '<span class="log-type">Note</span>'
+                        : `<span class="log-duration">${entry.duration} min session</span>`
+                    }
                     <button class="edit-log-btn">Edit</button>
                   </div>
               </div>

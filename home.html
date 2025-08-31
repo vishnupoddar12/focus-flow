@@ -1,69 +1,83 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>FocusFlow - Home</title>
-    <link rel="stylesheet" href="home.css">
-</head>
-<body>
+    <link rel="stylesheet" href="home.css" />
+  </head>
+
+  <body>
     <div class="container">
-        <header>
-            <h1>FocusFlow</h1>
-            <p>Your space for deep work.</p>
-        </header>
+      <header>
+        <h1>FocusFlow</h1>
+        <p>Your space for deep work.</p>
+      </header>
 
-        <main>
-            <!-- Error Message Section -->
-            <div id="error-section" class="card error hidden">
-                <p id="error-message"></p>
+      <main>
+        <!-- Error Message Section -->
+        <div id="error-section" class="card error hidden">
+          <p id="error-message"></p>
+        </div>
+
+        <!-- Timer Section -->
+        <div id="timer-section" class="card">
+          <!-- Start State -->
+          <div id="start-state">
+            <h2>Start a New Session</h2>
+            <div class="button-group">
+              <button class="start-btn" data-duration="1">1 minute</button>
+              <button class="start-btn" data-duration="25">25 minutes</button>
+              <button class="start-btn" data-duration="35">35 minutes</button>
+              <button class="start-btn" data-duration="45">45 minutes</button>
+              <button class="start-btn" data-duration="55">55 minutes</button>
             </div>
+          </div>
 
-            <!-- Timer Section -->
-            <div id="timer-section" class="card">
-                <!-- Start State -->
-                <div id="start-state">
-                    <h2>Start a New Session</h2>
-                    <div class="button-group">
-                        <button class="start-btn" data-duration="1">1 minute</button>
-                        <button class="start-btn" data-duration="25">25 minutes</button>
-                        <button class="start-btn" data-duration="35">35 minutes</button>
-                        <button class="start-btn" data-duration="45">45 minutes</button>
-                        <button class="start-btn" data-duration="55">55 minutes</button>
-                    </div>
-                </div>
+          <!-- Running State -->
+          <div id="running-state" class="hidden">
+            <p id="timer-display">00:00</p>
+          </div>
 
-                <!-- Running State -->
-                <div id="running-state" class="hidden">
-                    <p id="timer-display">00:00</p>
-                </div>
+          <!-- End State -->
+          <div id="end-state" class="hidden">
+            <h2>Session Finished!</h2>
+            <p>Log your accomplishments before starting a new session.</p>
+          </div>
+        </div>
+        <!-- Note Section -->
+        <div id="note-section" class="card">
+          <h2>Add a Note</h2>
+          <textarea
+            id="note-input"
+            placeholder="Jot down a quick thought or task..."
+          ></textarea>
+          <div class="summary-footer">
+            <span></span> <button id="submit-note-btn">Save Note</button>
+          </div>
+        </div>
 
-                <!-- End State -->
-                <div id="end-state" class="hidden">
-                    <h2>Session Finished!</h2>
-                    <p>Log your accomplishments before starting a new session.</p>
-                </div>
-            </div>
+        <div id="summary-section" class="card hidden">
+          <h2>Log Your Session</h2>
+          <textarea
+            id="summary-input"
+            placeholder="What did you accomplish during this session? Be detailed... (min 50 words)"
+          ></textarea>
+          <div class="summary-footer">
+            <span id="word-counter">0 / 50 words</span>
+            <button id="submit-log-btn" disabled>Submit Log</button>
+          </div>
+        </div>
 
-            <!-- Summary Input Section -->
-            <div id="summary-section" class="card hidden">
-                <h2>Log Your Session</h2>
-                <textarea id="summary-input" placeholder="What did you accomplish during this session? Be detailed... (min 50 words)"></textarea>
-                <div class="summary-footer">
-                    <span id="word-counter">0 / 50 words</span>
-                    <button id="submit-log-btn" disabled>Submit Log</button>
-                </div>
-            </div>
-
-            <!-- Past Pomos Section -->
-            <div id="log-section" class="card">
-                <h2>Past Sessions</h2>
-                <div id="pomo-log-container">
-                    <!-- Log entries will be dynamically inserted here -->
-                </div>
-            </div>
-        </main>
+        <!-- Past Pomos Section -->
+        <div id="log-section" class="card">
+          <h2>Past Entries</h2>
+          <div id="pomo-log-container">
+            <!-- Log entries will be dynamically inserted here -->
+          </div>
+        </div>
+      </main>
     </div>
     <script src="home.js"></script>
-</body>
+  </body>
 </html>
